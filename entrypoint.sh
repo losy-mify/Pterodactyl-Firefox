@@ -19,15 +19,21 @@ sleep 2
 echo "🪟 Starting Fluxbox..."
 fluxbox &
 
-# 5. 启动 VNC 服务器
-# 监听 5800 端口 (面板默认)，无密码
-echo "🔗 Starting VNC on port 5800..."
-x11vnc -display :0 -forever -nopw -listen 0.0.0.0 -xkb -rfbport 5800 &
+# 5. 启动 VNC 服务器 (内部使用)
+# 注意：改为监听 localhost:5900，不让外部直接连 VNC 了
+echo "🔗 Starting internal x11vnc..."
+x11vnc -display :0 -forever -nopw -listen localhost -xkb -rfbport 5900 &
+sleep 2
 
-# 6. 启动 Firefox (无限循环保活)
+# 6. 启动 noVNC 网页代理 (核心步骤)
+# 监听 5800 端口，把它转换成网页，指向内部的 5900
+echo "🌐 Starting noVNC Web Server on port 5800..."
+# --web 指定网页文件位置，5800 是对外端口，localhost:5900 是目标
+websockify --web /usr/share/novnc 5800 localhost:5900 &
+
+# 7. 启动 Firefox (无限循环保活)
 echo "🦊 Starting Firefox..."
 while true; do
-    # --no-remote 允许复用，--kiosk 可以全屏模式(可选)
     firefox --no-remote --display=:0
     echo "Firefox 崩溃或关闭，3秒后重启..."
     sleep 3
