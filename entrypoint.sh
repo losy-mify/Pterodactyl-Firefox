@@ -1,8 +1,7 @@
 #!/bin/bash
 # ================= 配置区域 =================
 VNC_PASS="AkiRa13218*#"
-# 👇 回到合适的尺寸，稍微比 1280x900 大一点
-RESOLUTION="1400x875x24"   
+RESOLUTION="1440x900x24"   
 # ===========================================
 
 # 1. 设置中文环境
@@ -41,6 +40,7 @@ Path=custom_profile.default
 Default=1
 EOF
 
+# 👇 关键改动：设置 Firefox 的 DPI 和默认缩放
 cat > "$HOME/.mozilla/firefox/custom_profile.default/user.js" <<EOF
 user_pref("general.smoothScroll", false);
 user_pref("layout.frame_rate", 20);
@@ -48,6 +48,10 @@ user_pref("toolkit.cosmeticAnimations.enabled", false);
 user_pref("browser.tabs.animate", false);
 user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
+
+// 👇 核心修复：降低 DPI 和页面缩放
+user_pref("layout.css.devPixelsPerPx", "0.8");  // 降低 UI 元素大小到 80%
+user_pref("browser.display.os-zoom-behavior", 0);  // 禁用系统缩放
 EOF
 
 # 6. 配置 Fluxbox
