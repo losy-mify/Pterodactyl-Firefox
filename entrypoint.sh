@@ -1,7 +1,7 @@
 #!/bin/bash
 # ================= 配置区域 =================
 VNC_PASS="AkiRa13218*#"
-# 👈 根据你的截图实际测算：浏览器内容区域约 1280x720
+# 👈 适中尺寸，保留 Firefox 标签栏
 RESOLUTION="1280x720x24"   
 # ===========================================
 
@@ -48,10 +48,9 @@ user_pref("toolkit.cosmeticAnimations.enabled", false);
 user_pref("browser.tabs.animate", false);
 user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
-user_pref("browser.fullscreen.autohide", false);
 EOF
 
-# 6. 配置 Fluxbox - 完全无装饰
+# 6. 配置 Fluxbox - 无边框但不隐藏 Firefox UI
 mkdir -p $HOME/.fluxbox
 cat > $HOME/.fluxbox/init <<EOF
 session.screen0.toolbar.visible: false
@@ -88,10 +87,11 @@ CURRENT_PORT=${SERVER_PORT:-25830}
 echo "🌐 Starting noVNC on port $CURRENT_PORT..."
 websockify --web /usr/share/novnc $CURRENT_PORT localhost:5900 &
 
-echo "🦊 Starting Firefox..."
+echo "🦊 Starting Firefox (normal mode with tabs)..."
 sleep 3
 while true; do
-    firefox --no-remote --display=:0 --kiosk
+    # 👈 关键改动：使用普通模式，不用 --kiosk
+    firefox --no-remote --display=:0 --new-instance
     echo "Firefox restarting..."
     sleep 3
 done
