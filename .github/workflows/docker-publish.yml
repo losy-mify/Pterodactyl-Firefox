@@ -2,7 +2,7 @@ name: Build and Push to GitHub Packages
 
 on:
   push:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 # 这一步很重要：赋予流水线写如 Packages 的权限
 permissions:
