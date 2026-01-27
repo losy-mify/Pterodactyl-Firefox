@@ -1,8 +1,8 @@
 #!/bin/bash
 # ================= 配置区域 =================
 VNC_PASS="AkiRa13218*#"
-# 👇 16:10 比例，完美适配 MacBook 浏览器窗口，无缩放无留白
-RESOLUTION="1280x800x24"   
+# 👇 增加宽度和高度，消除黑边
+RESOLUTION="1280x900x24"   
 # ===========================================
 
 # 1. 设置中文环境
@@ -50,7 +50,7 @@ user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
 EOF
 
-# 6. 配置 Fluxbox - 无边框
+# 6. 配置 Fluxbox
 mkdir -p $HOME/.fluxbox
 cat > $HOME/.fluxbox/init <<EOF
 session.screen0.toolbar.visible: false
