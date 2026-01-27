@@ -2,9 +2,9 @@
 
 # ================= 配置区域 =================
 VNC_PASS="AkiRa13218*#"
-# 👈 修改：1280x720 (720P) 
-# 这是最适合 13寸 Mac 浏览器窗口的大小，不会太小，也不会导致滚动条
-RESOLUTION="1280x720x24"   
+# 👈 核心修改：宽度 1024，高度 600
+# 这个尺寸能完美放进带有地址栏和书签栏的 Chrome 窗口中
+RESOLUTION="1024x600x24"   
 # ===========================================
 
 # 1. 设置中文环境
@@ -74,8 +74,8 @@ websockify --web /usr/share/novnc $CURRENT_PORT localhost:5900 &
 
 echo "🦊 Starting Firefox..."
 while true; do
-    # 👈 对应修改：强制 Firefox 使用 1280x720
-    firefox --no-remote --display=:0 --width=1280 --height=720
+    # 👈 对应修改：强制 Firefox 适应 1024x600
+    firefox --no-remote --display=:0 --width=1024 --height=600
     echo "Firefox restart..."
     sleep 3
 done
