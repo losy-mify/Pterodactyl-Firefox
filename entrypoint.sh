@@ -1,9 +1,8 @@
 #!/bin/bash
-
 # ================= 配置区域 =================
 VNC_PASS="AkiRa13218*#"
-# 👈 核心修改：宽度 1280 (够宽)，高度 640 (够矮，绝对不出现滚动条)
-RESOLUTION="1280x640x24"   
+# 👈 根据你的截图实际测算：浏览器内容区域约 1280x720
+RESOLUTION="1280x720x24"   
 # ===========================================
 
 # 1. 设置中文环境
@@ -49,22 +48,40 @@ user_pref("toolkit.cosmeticAnimations.enabled", false);
 user_pref("browser.tabs.animate", false);
 user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
+user_pref("browser.fullscreen.autohide", false);
 EOF
 
-# 6. 设置密码
+# 6. 配置 Fluxbox - 完全无装饰
+mkdir -p $HOME/.fluxbox
+cat > $HOME/.fluxbox/init <<EOF
+session.screen0.toolbar.visible: false
+session.screen0.defaultDeco: NONE
+session.screen0.fullMaximization: true
+EOF
+
+cat > $HOME/.fluxbox/apps <<EOF
+[app] (class=Firefox)
+  [Deco] {NONE}
+  [Maximized] {yes}
+EOF
+
+# 7. 设置密码
 x11vnc -storepasswd "$VNC_PASS" $HOME/.vnc/passwd
 
-# 7. 启动服务
+# 8. 启动服务
 echo "🖥️ Starting Xvfb ($RESOLUTION)..."
 rm -f /tmp/.X0-lock
-Xvfb :0 -screen 0 $RESOLUTION &
+Xvfb :0 -screen 0 $RESOLUTION -ac &
 sleep 3
 
 echo "🪟 Starting Fluxbox..."
 fluxbox &
+sleep 2
 
-echo "🔗 Starting optimized x11vnc..."
-x11vnc -display :0 -forever -rfbauth $HOME/.vnc/passwd -listen localhost -xkb -rfbport 5900 -ncache 10 -nap &
+echo "🔗 Starting x11vnc..."
+x11vnc -display :0 -forever -rfbauth $HOME/.vnc/passwd \
+    -listen localhost -xkb -rfbport 5900 \
+    -ncache 10 -nap &
 sleep 2
 
 CURRENT_PORT=${SERVER_PORT:-25830}
@@ -72,9 +89,9 @@ echo "🌐 Starting noVNC on port $CURRENT_PORT..."
 websockify --web /usr/share/novnc $CURRENT_PORT localhost:5900 &
 
 echo "🦊 Starting Firefox..."
+sleep 3
 while true; do
-    # 👈 对应修改：强制 Firefox 适应 1280x640
-    firefox --no-remote --display=:0 --width=1280 --height=640
-    echo "Firefox restart..."
+    firefox --no-remote --display=:0 --kiosk
+    echo "Firefox restarting..."
     sleep 3
 done
