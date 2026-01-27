@@ -33,6 +33,7 @@ mkdir -p $HOME/.vnc $HOME/.mozilla/firefox/custom_profile.default
 cat > $HOME/.mozilla/firefox/profiles.ini <<EOF
 [General]
 StartWithLastProfile=1
+
 [Profile0]
 Name=Default
 IsRelative=1
@@ -40,6 +41,7 @@ Path=custom_profile.default
 Default=1
 EOF
 
+# 👇 修改了这里：加入了全局缩放配置
 cat > "$HOME/.mozilla/firefox/custom_profile.default/user.js" <<EOF
 user_pref("general.smoothScroll", false);
 user_pref("layout.frame_rate", 20);
@@ -47,6 +49,7 @@ user_pref("toolkit.cosmeticAnimations.enabled", false);
 user_pref("browser.tabs.animate", false);
 user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
+user_pref("layout.css.devPixelsPerPx", "0.8");
 EOF
 
 # 6. 配置 Fluxbox - 无边框但不隐藏 Firefox UI
@@ -89,7 +92,7 @@ websockify --web /usr/share/novnc $CURRENT_PORT localhost:5900 &
 echo "🦊 Starting Firefox (normal mode with tabs)..."
 sleep 3
 while true; do
-    # 👈 关键改动：使用普通模式，不用 --kiosk
+    # 👈 保持你的普通模式设置
     firefox --no-remote --display=:0 --new-instance
     echo "Firefox restarting..."
     sleep 3
