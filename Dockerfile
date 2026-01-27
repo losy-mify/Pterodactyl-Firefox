@@ -1,6 +1,7 @@
 FROM alpine:latest
 
-# 1. 安装软件：Firefox, Xvfb(虚拟屏), x11vnc(远程连接), Fluxbox(窗口管理), Bash
+# 1. 安装软件：增加了 novnc, websockify, dbus(修复报错)
+# python3 是 websockify 运行需要的
 RUN apk add --no-cache \
     firefox \
     xvfb \
@@ -9,20 +10,31 @@ RUN apk add --no-cache \
     bash \
     busybox-extras \
     ttf-dejavu \
-    font-noto-cjk  # 安装中文字体，防止网页乱码
+    font-noto-cjk \
+    novnc \
+    websockify \
+    python3 \
+    dbus
 
-# 2. 创建用户 (模拟面板环境)
+# 2. 【关键修复】生成 machine-id，解决 Firefox 闪退/黑屏问题
+# 因为构建时是 Root 权限，我们直接写入系统文件，这样运行时就不用写了（避开只读锁）
+RUN dbus-uuidgen > /etc/machine-id
+
+# 3. 修正 noVNC 的入口文件，让你打开网页不用输文件名
+# 如果 /usr/share/novnc 下没有 index.html，就把 vnc.html 复制一份过去
+RUN if [ ! -f /usr/share/novnc/index.html ]; then cp /usr/share/novnc/vnc.html /usr/share/novnc/index.html; fi
+
+# 4. 创建用户 (模拟面板环境)
 RUN adduser -D -h /home/container container
 
-# 3. 设置默认用户
+# 5. 设置默认用户
 USER container
 ENV USER=container HOME=/home/container
 WORKDIR /home/container
 
-# 4. 复制启动脚本
+# 6. 复制启动脚本
 COPY --chown=container:container entrypoint.sh /entrypoint.sh
-# 给脚本执行权限 (这一步很重要)
 RUN chmod +x /entrypoint.sh
 
-# 5. 启动指令
+# 7. 启动指令
 CMD ["/bin/bash", "/entrypoint.sh"]
