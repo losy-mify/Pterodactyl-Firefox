@@ -1,8 +1,8 @@
 #!/bin/bash
 # ================= 配置区域 =================
 VNC_PASS="AkiRa13218*#"
-# 👈 增加高度到 900，保证内容不被截断
-RESOLUTION="1440x900x24"   
+# 👇 设置一个比较大的默认分辨率
+DEFAULT_RESOLUTION="1440x900x24"
 # ===========================================
 
 # 1. 设置中文环境
@@ -50,7 +50,7 @@ user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
 EOF
 
-# 6. 配置 Fluxbox - 无边框
+# 6. 配置 Fluxbox
 mkdir -p $HOME/.fluxbox
 cat > $HOME/.fluxbox/init <<EOF
 session.screen0.toolbar.visible: false
@@ -67,20 +67,22 @@ EOF
 # 7. 设置密码
 x11vnc -storepasswd "$VNC_PASS" $HOME/.vnc/passwd
 
-# 8. 启动服务
-echo "🖥️ Starting Xvfb ($RESOLUTION)..."
+# 8. 启动 Xvfb with RandR extension (支持动态分辨率切换)
+echo "🖥️ Starting Xvfb with dynamic resolution support..."
 rm -f /tmp/.X0-lock
-Xvfb :0 -screen 0 $RESOLUTION -ac &
+Xvfb :0 -screen 0 ${DEFAULT_RESOLUTION} -ac +extension RANDR &
 sleep 3
 
 echo "🪟 Starting Fluxbox..."
 fluxbox &
 sleep 2
 
-echo "🔗 Starting x11vnc..."
+# 9. 启动 x11vnc with RandR support (允许客户端调整分辨率)
+echo "🔗 Starting x11vnc with resolution scaling..."
 x11vnc -display :0 -forever -rfbauth $HOME/.vnc/passwd \
     -listen localhost -xkb -rfbport 5900 \
-    -ncache 10 -nap &
+    -ncache 10 -nap \
+    -randr resize &
 sleep 2
 
 CURRENT_PORT=${SERVER_PORT:-25830}
