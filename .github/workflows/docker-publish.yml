@@ -2,9 +2,8 @@ name: Build and Push to GitHub Packages
 
 on:
   push:
-  workflow_dispatch:
+    branches: [ "main" ]
 
-# 这一步很重要：赋予流水线写如 Packages 的权限
 permissions:
   contents: read
   packages: write
@@ -23,7 +22,6 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          # 注意：这里直接用 GitHub 自带的变量，不需要你自己设置 Secrets
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -32,6 +30,5 @@ jobs:
         with:
           context: .
           push: true
-          # 自动生成镜像地址：ghcr.io/你的用户名/仓库名:latest
-          # 注意：Docker 镜像名必须全小写。如果你 GitHub 用户名有大写，请手动把下方写死为小写
-          tags: ghcr.io/${{ github.repository }}:latest
+          # 这里已手动修正为全小写
+          tags: ghcr.io/losy-mify/pterodactyl-firefox:latest
