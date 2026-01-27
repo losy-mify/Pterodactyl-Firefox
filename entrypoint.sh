@@ -1,8 +1,8 @@
 #!/bin/bash
 # ================= 配置区域 =================
 VNC_PASS="AkiRa13218*#"
-# 👈 适中尺寸，保留 Firefox 标签栏
-RESOLUTION="1280x720x24"   
+# 👈 增加高度到 900，保证内容不被截断
+RESOLUTION="1440x900x24"   
 # ===========================================
 
 # 1. 设置中文环境
@@ -50,7 +50,7 @@ user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
 EOF
 
-# 6. 配置 Fluxbox - 无边框但不隐藏 Firefox UI
+# 6. 配置 Fluxbox - 无边框
 mkdir -p $HOME/.fluxbox
 cat > $HOME/.fluxbox/init <<EOF
 session.screen0.toolbar.visible: false
@@ -87,10 +87,9 @@ CURRENT_PORT=${SERVER_PORT:-25830}
 echo "🌐 Starting noVNC on port $CURRENT_PORT..."
 websockify --web /usr/share/novnc $CURRENT_PORT localhost:5900 &
 
-echo "🦊 Starting Firefox (normal mode with tabs)..."
+echo "🦊 Starting Firefox..."
 sleep 3
 while true; do
-    # 👈 关键改动：使用普通模式，不用 --kiosk
     firefox --no-remote --display=:0 --new-instance
     echo "Firefox restarting..."
     sleep 3
