@@ -1,57 +1,85 @@
 #!/bin/bash
 
 # ================= 配置区域 =================
-# 在这里修改你的密码！
-VNC_PASS="AkiRa13218*#"
+VNC_PASS="AkiRa13218*#"   # 你的密码
+RESOLUTION="1024x768x16"      # 分辨率
 # ===========================================
 
-# 1. 强制将所有配置路径指向 /home/container
+# 1. 设置中文环境 (解决乱码的核心)
+export LANG=zh_CN.UTF-8
+export LANGUAGE=zh_CN:zh
+export LC_ALL=zh_CN.UTF-8
+
+# 2. 基础路径
 export HOME=/home/container
 export XDG_CACHE_HOME=$HOME/.cache
 export XDG_CONFIG_HOME=$HOME/.config
 export XDG_DATA_HOME=$HOME/.local/share
 export DISPLAY=:0
 
-# 禁用 Firefox 沙盒 (防止崩溃)
+# 3. Firefox 性能优化参数
 export MOZ_DISABLE_CONTENT_SANDBOX=1
 export MOZ_FAKE_NO_SANDBOX=1
+export MOZ_GFX_SPOOF_GL_VENDOR="Mesa"
+export MOZ_GFX_SPOOF_GL_RENDERER="llvmpipe"
+export MOZ_WEBRENDER=0
+export MOZ_ACCELERATED=0
 
-# 2. 确保配置目录存在
+# 4. 初始化目录
 mkdir -p $XDG_CACHE_HOME $XDG_CONFIG_HOME $XDG_DATA_HOME
-
-# 3. 设置 VNC 密码文件
-# 创建密码存放目录
 mkdir -p $HOME/.vnc
-# 将密码写入文件 (x11vnc 专用格式)
+
+# 5. 注入性能优化配置 (user.js)
+FF_PROFILE_DIR="$HOME/.mozilla/firefox/custom_profile.default"
+mkdir -p "$FF_PROFILE_DIR"
+
+cat > $HOME/.mozilla/firefox/profiles.ini <<EOF
+[General]
+StartWithLastProfile=1
+
+[Profile0]
+Name=Default
+IsRelative=1
+Path=custom_profile.default
+Default=1
+EOF
+
+cat > "$FF_PROFILE_DIR/user.js" <<EOF
+user_pref("general.smoothScroll", false);
+user_pref("layout.frame_rate", 20);
+user_pref("toolkit.cosmeticAnimations.enabled", false);
+user_pref("browser.tabs.animate", false);
+user_pref("image.animation_mode", "none");
+user_pref("layers.acceleration.disabled", true);
+user_pref("gfx.webrender.all", false);
+user_pref("gfx.webrender.software", true);
+user_pref("browser.cache.disk.enable", false);
+user_pref("browser.cache.memory.enable", true);
+user_pref("intl.accept_languages", "zh-CN, zh, en-US, en"); // 优先请求中文网页
+EOF
+
+# 6. 设置密码
 x11vnc -storepasswd "$VNC_PASS" $HOME/.vnc/passwd
 
-# 4. 启动虚拟屏幕
-echo "🖥️ Starting Xvfb..."
-Xvfb :0 -screen 0 1280x720x16 &
+# 7. 启动服务
+echo "🖥️ Starting Xvfb ($RESOLUTION)..."
+Xvfb :0 -screen 0 $RESOLUTION &
 sleep 2
 
-# 5. 启动窗口管理器
 echo "🪟 Starting Fluxbox..."
 fluxbox &
 
-# 6. 启动 VNC 服务器 (内部监听 5900)
-# 【关键修改】去掉了 -nopw，改成了 -rfbauth 使用密码文件
-echo "🔗 Starting internal x11vnc with PASSWORD..."
-x11vnc -display :0 -forever -rfbauth $HOME/.vnc/passwd -listen localhost -xkb -rfbport 5900 &
+echo "🔗 Starting optimized x11vnc..."
+x11vnc -display :0 -forever -rfbauth $HOME/.vnc/passwd -listen localhost -xkb -rfbport 5900 -ncache 10 -nap &
 sleep 2
 
-# 7. 启动 noVNC 网页代理
-# 使用 $SERVER_PORT 变量 (自动适配面板端口)
 CURRENT_PORT=${SERVER_PORT:-25830}
-echo "🌐 Starting noVNC Web Server on port $CURRENT_PORT..."
-
-# 监听外部端口，转发到内部 5900
+echo "🌐 Starting noVNC on port $CURRENT_PORT..."
 websockify --web /usr/share/novnc $CURRENT_PORT localhost:5900 &
 
-# 8. 启动 Firefox
 echo "🦊 Starting Firefox..."
 while true; do
     firefox --no-remote --display=:0
-    echo "Firefox 崩溃或关闭，3秒后重启..."
+    echo "Firefox restart..."
     sleep 3
 done
