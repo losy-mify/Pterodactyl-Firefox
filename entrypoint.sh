@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # ================= 配置区域 =================
-VNC_PASS=""   # 你的密码
+VNC_PASS="MySecretPassword"   # 你的密码
 RESOLUTION="1024x768x16"      # 分辨率
 # ===========================================
 
-# 1. 设置中文环境
+# 1. 设置中文环境 (解决乱码的核心)
 export LANG=zh_CN.UTF-8
 export LANGUAGE=zh_CN:zh
 export LC_ALL=zh_CN.UTF-8
@@ -17,10 +17,9 @@ export XDG_CONFIG_HOME=$HOME/.config
 export XDG_DATA_HOME=$HOME/.local/share
 export DISPLAY=:0
 
-# 3. Firefox 必须参数 (禁用沙盒)
+# 3. Firefox 性能优化参数
 export MOZ_DISABLE_CONTENT_SANDBOX=1
 export MOZ_FAKE_NO_SANDBOX=1
-# 性能优化参数
 export MOZ_GFX_SPOOF_GL_VENDOR="Mesa"
 export MOZ_GFX_SPOOF_GL_RENDERER="llvmpipe"
 export MOZ_WEBRENDER=0
@@ -30,11 +29,10 @@ export MOZ_ACCELERATED=0
 mkdir -p $XDG_CACHE_HOME $XDG_CONFIG_HOME $XDG_DATA_HOME
 mkdir -p $HOME/.vnc
 
-# 5. 【配置核心】注入 user.js 和 userChrome.css
+# 5. 注入性能优化配置 (user.js)
 FF_PROFILE_DIR="$HOME/.mozilla/firefox/custom_profile.default"
-mkdir -p "$FF_PROFILE_DIR/chrome" # 新建 chrome 目录存放样式文件
+mkdir -p "$FF_PROFILE_DIR"
 
-# (A) 写入 profiles.ini
 cat > $HOME/.mozilla/firefox/profiles.ini <<EOF
 [General]
 StartWithLastProfile=1
@@ -46,9 +44,7 @@ Path=custom_profile.default
 Default=1
 EOF
 
-# (B) 写入 user.js (性能优化 + 允许修改界面)
 cat > "$FF_PROFILE_DIR/user.js" <<EOF
-// --- 核心优化 ---
 user_pref("general.smoothScroll", false);
 user_pref("layout.frame_rate", 20);
 user_pref("toolkit.cosmeticAnimations.enabled", false);
@@ -59,25 +55,7 @@ user_pref("gfx.webrender.all", false);
 user_pref("gfx.webrender.software", true);
 user_pref("browser.cache.disk.enable", false);
 user_pref("browser.cache.memory.enable", true);
-user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
-
-// --- 【关键】允许加载自定义 CSS 样式 ---
-user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
-EOF
-
-# (C) 写入 userChrome.css (隐藏那个该死的黄条)
-cat > "$FF_PROFILE_DIR/chrome/userChrome.css" <<EOF
-/* 隐藏 '安全沙盒已禁用' 的警告条 */
-notification-message[value="sandbox-disabled"],
-.notification-message[value="sandbox-disabled"] {
-    display: none !important;
-    visibility: hidden !important;
-}
-
-/* 如果上面的没生效，这一条会隐藏顶部所有系统级通知 */
-#global-notificationbox {
-    display: none !important;
-}
+user_pref("intl.accept_languages", "zh-CN, zh, en-US, en"); // 优先请求中文网页
 EOF
 
 # 6. 设置密码
