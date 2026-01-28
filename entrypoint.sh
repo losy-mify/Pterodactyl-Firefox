@@ -26,33 +26,25 @@ export MOZ_ACCELERATED=0
 export MOZ_GMP_SANDBOX=0
 
 # 4. 初始化目录
+# 确保配置文件夹路径存在
+PROFILE_DIR="$HOME/.mozilla/firefox/custom_profile.default"
 mkdir -p $XDG_CACHE_HOME $XDG_CONFIG_HOME $XDG_DATA_HOME
-mkdir -p $HOME/.vnc $HOME/.mozilla/firefox/custom_profile.default
+mkdir -p $HOME/.vnc "$PROFILE_DIR"
 
-# 5. 注入配置
-cat > $HOME/.mozilla/firefox/profiles.ini <<EOF
-[General]
-StartWithLastProfile=1
-
-[Profile0]
-Name=Default
-IsRelative=1
-Path=custom_profile.default
-Default=1
-EOF
-
-# 👇 修改了这里：加入了全局缩放配置
-cat > "$HOME/.mozilla/firefox/custom_profile.default/user.js" <<EOF
+# 5. 注入配置 (user.js)
+# 注意：我们不再需要修改 profiles.ini，因为我们会强制指定路径
+cat > "$PROFILE_DIR/user.js" <<EOF
 user_pref("general.smoothScroll", false);
 user_pref("layout.frame_rate", 20);
 user_pref("toolkit.cosmeticAnimations.enabled", false);
 user_pref("browser.tabs.animate", false);
 user_pref("layers.acceleration.disabled", true);
 user_pref("intl.accept_languages", "zh-CN, zh, en-US, en");
+// 强制全局缩放 80% (0.8)，必须带引号
 user_pref("layout.css.devPixelsPerPx", "0.8");
 EOF
 
-# 6. 配置 Fluxbox - 无边框但不隐藏 Firefox UI
+# 6. 配置 Fluxbox
 mkdir -p $HOME/.fluxbox
 cat > $HOME/.fluxbox/init <<EOF
 session.screen0.toolbar.visible: false
@@ -89,11 +81,11 @@ CURRENT_PORT=${SERVER_PORT:-25830}
 echo "🌐 Starting noVNC on port $CURRENT_PORT..."
 websockify --web /usr/share/novnc $CURRENT_PORT localhost:5900 &
 
-echo "🦊 Starting Firefox (normal mode with tabs)..."
+echo "🦊 Starting Firefox (Forcing Custom Profile)..."
 sleep 3
 while true; do
-    # 👈 保持你的普通模式设置
-    firefox --no-remote --display=:0 --new-instance
+    # 👇 关键修改：添加了 -profile 参数，强制指向包含 user.js 的文件夹
+    firefox --profile "$PROFILE_DIR" --no-remote --display=:0 --new-instance
     echo "Firefox restarting..."
     sleep 3
 done
