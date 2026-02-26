@@ -3,7 +3,7 @@ ACTION=$1
 
 # 接收基础环境变量，提供默认值保底 (默认对外端口已改为 9010)
 PORT=${CM_PORT:-9010}
-PASS=${CM_PASS:-'AkiRa13218*#'}
+PASS=${CM_PASS:-'Ww112211'}
 
 if [ "$ACTION" == "start" ]; then
     echo "=> 1. 正在清理旧环境并创建专用网络..."
